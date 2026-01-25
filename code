@@ -1,0 +1,165 @@
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <DHT.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+// OLED setup
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+#define OLED_ADDR 0x3C
+
+// Pin setup
+#define SDA_PIN 4       // D2
+#define SCL_PIN 5       // D1
+#define DHT_PIN 0       // D3
+#define DHT_TYPE DHT11
+#define DS18B20_PIN 13  // D7
+#define GAS_PIN A0
+#define RED_LED 12      // D6
+#define GREEN_LED 14    // D5
+#define BUZZER_PIN 2    // D4
+
+// Sensor thresholds
+#define GAS_BASELINE 70
+#define GAS_ALERT_LEVEL 120
+#define TEMP_ALERT_HIGH 40
+#define TEMP_ALERT_LOW 20
+
+// Objects
+DHT dht(DHT_PIN, DHT_TYPE);
+OneWire oneWire(DS18B20_PIN);
+DallasTemperature ds18b20(&oneWire);
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+// --- Helper Functions ---
+void blinkLED(int pin, int times, int delayTime = 200) {
+  for (int i = 0; i < times; i++) {
+    digitalWrite(pin, HIGH);
+    delay(delayTime);
+    digitalWrite(pin, LOW);
+    delay(delayTime);
+  }
+}
+
+void beepBuzzer(int times) {
+  for (int i = 0; i < times; i++) {
+    digitalWrite(BUZZER_PIN, HIGH);
+    delay(200);
+    digitalWrite(BUZZER_PIN, LOW);
+    delay(200);
+  }
+}
+
+// --- Startup screen ---
+void showIntroScreen() {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(10, 20);
+  display.println("COAL MINING");
+  display.setTextSize(1);
+  display.setCursor(10, 35);
+  display.println("IOT PROJECT");
+  display.display();
+
+  // Blink LEDs & Buzzer briefly for startup effect
+  blinkLED(GREEN_LED, 2, 200);
+  beepBuzzer(1);
+  delay(2000); // Show intro for 2 seconds
+}
+
+void setup() {
+  Serial.begin(115200);
+  Wire.begin(SDA_PIN, SCL_PIN);
+  dht.begin();
+  ds18b20.begin();
+
+  pinMode(RED_LED, OUTPUT);
+  pinMode(GREEN_LED, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+
+  digitalWrite(RED_LED, LOW);
+  digitalWrite(GREEN_LED, LOW);
+  digitalWrite(BUZZER_PIN, LOW);
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR)) {
+    Serial.println("OLED init failed!");
+    while (1);
+  }
+
+  // --- Show intro screen ---
+  showIntroScreen();
+
+  display.clearDisplay();
+  display.display();
+  Serial.println("System ready...");
+}
+
+void loop() {
+  // --- Read sensors ---
+  float dhtTemp = dht.readTemperature();
+  float humidity = dht.readHumidity();
+  ds18b20.requestTemperatures();
+  float dsTemp = ds18b20.getTempCByIndex(0);
+  int rawGasValue = analogRead(GAS_PIN);
+  int gasValue = rawGasValue - GAS_BASELINE;
+  if (gasValue < 0) gasValue = 0;
+
+  // Handle DS18B20 errors
+  if (dsTemp == -127) {
+    Serial.println("⚠ DS18B20 not detected!");
+    dsTemp = 0;
+  }
+
+  // --- Display on OLED ---
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.print("Temp: ");
+  display.print(dhtTemp, 1);
+  display.println(" C");
+
+  display.setCursor(0, 16);
+ display.print("Humidity: ");
+  display.print(humidity, 1);
+  display.println(" %"); 
+
+  display.setCursor(0, 32);
+ display.print("Gas: ");
+  display.print(gasValue);
+  display.display();
+
+
+  // --- Serial log ---
+  Serial.print("DHT Temp: ");
+  Serial.print(dhtTemp);
+  Serial.print(" °C | DS18B20: ");
+  Serial.print(dsTemp);
+  Serial.print(" °C | Humi: ");
+  Serial.print(humidity);
+  Serial.print("% | Gas: ");
+  Serial.println(gasValue);
+
+  // --- Alerts ---
+  if (gasValue > GAS_ALERT_LEVEL) {
+    Serial.println("🚨 HIGH GAS LEVEL!");
+    beepBuzzer(3);
+    blinkLED(RED_LED, 5, 200);
+  } else if (gasValue < 70) {
+    blinkLED(GREEN_LED, 2, 200);
+  }
+
+  if (dsTemp > TEMP_ALERT_HIGH || dhtTemp > TEMP_ALERT_HIGH) {
+    Serial.println("🔥 Temperature too high!");
+    beepBuzzer(2);
+    blinkLED(RED_LED, 3, 300);
+  } else if (dsTemp < TEMP_ALERT_LOW && dsTemp != 0) {
+    blinkLED(GREEN_LED, 3, 200);
+  }
+
+  delay(1500);
+}
