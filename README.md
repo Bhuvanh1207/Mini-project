@@ -84,7 +84,8 @@ This system detects methane gas leakage, abnormal temperature rise, humidity lev
 ## 📷 Project Demonstration
 
 ### Circuit Diagram
-[View Circuit Diagram](<img width="1167" height="996" alt="image" src="https://github.com/user-attachments/assets/e9650af8-69d4-4455-9b1c-9c1d51930c6f" />
+[View Circuit Diagram](<img width="1167" height="996" alt="image" src="https://github.com/user-attachments/assets/567adbf6-99a1-47f6-9aae-c8c83facf47e" />
+
 )
 
 
