@@ -87,8 +87,6 @@ This system detects methane gas leakage, abnormal temperature rise, humidity lev
 [View Circuit Diagram](<img width="1167" height="996" alt="image" src="https://github.com/user-attachments/assets/e9650af8-69d4-4455-9b1c-9c1d51930c6f" />
 )
 
-### Source Code
-[View Arduino Code](PASTE_CODE_FOLDER_LINK_HERE)
 
 ### Demo Video
 [Watch Demo Video](https://www.linkedin.com/posts/bhuvan-h-8b557232b_iot-blynkiot-coalminesafety-ugcPost-7406255143710552064-WNIq?utm_source=share&utm_medium=member_android&rcm=ACoAAFMy9YkBSpeUIvtvhvPKjVBeHcCPV6ouwZ8)
