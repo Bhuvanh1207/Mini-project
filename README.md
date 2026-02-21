@@ -38,10 +38,10 @@ This system detects methane gas leakage, abnormal temperature rise, humidity lev
 
 ## 💻 Software & Technologies Used
 
-- Embedded C / Arduino IDE  
-- ThingSpeak / Blynk / Firebase  
+-  Arduino IDE  
+- Blynk 
 - MQTT / HTTP Protocol  
-- WiFi / GSM Communication  
+- WiFi 
 - Git & GitHub  
 
 ---
